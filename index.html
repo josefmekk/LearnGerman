@@ -339,60 +339,99 @@ let userProgress = {};
 // AUTH FUNCTIONS
 // ══════════════════════════════════════════════════════════════════════════════
 async function handleLogin() {
+  console.log('🔵 handleLogin called');
+  
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value.trim();
   
+  console.log('📝 Login attempt for:', email);
+  
   if (!email || !password) {
+    console.log('❌ Validation failed: missing credentials');
     showAuthError('Please enter email and password');
     return;
   }
   
-  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  console.log('🚀 Attempting Supabase login...');
   
-  if (error) {
-    showAuthError(error.message);
-  } else {
-    currentUser = data.user;
-    await loadUserData();
-    setScreen('home');
+  try {
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    
+    console.log('📦 Login response:', { data, error });
+    
+    if (error) {
+      console.log('❌ Login error:', error.message);
+      showAuthError(error.message);
+    } else {
+      console.log('✅ Login successful');
+      currentUser = data.user;
+      await loadUserData();
+      console.log('🏠 Redirecting to home...');
+      setScreen('home');
+    }
+  } catch (err) {
+    console.error('💥 Unexpected error:', err);
+    showAuthError('An unexpected error occurred: ' + err.message);
   }
 }
 
 async function handleSignup() {
+  console.log('🔵 handleSignup called');
+  
   const username = document.getElementById('signup-username').value.trim();
   const email = document.getElementById('signup-email').value.trim();
   const password = document.getElementById('signup-password').value.trim();
   
+  console.log('📝 Form values:', { username, email, passwordLength: password.length });
+  
   if (!username || !email || !password) {
+    console.log('❌ Validation failed: missing fields');
     showAuthError('Please fill in all fields');
     return;
   }
   
   if (password.length < 6) {
+    console.log('❌ Validation failed: password too short');
     showAuthError('Password must be at least 6 characters');
     return;
   }
   
-  const { data, error } = await supabaseClient.auth.signUp({
-    email,
-    password,
-    options: {
-      data: { username }
-    }
-  });
+  console.log('🚀 Attempting Supabase signup...');
   
-  if (error) {
-    showAuthError(error.message);
-  } else {
-    currentUser = data.user;
-    // Create user profile
-    await supabaseClient.from('profiles').insert({
-      id: currentUser.id,
-      username: username,
-      total_completed: 0
+  try {
+    const { data, error } = await supabaseClient.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { username }
+      }
     });
-    await loadUserData();
-    setScreen('home');
+    
+    console.log('📦 Supabase response:', { data, error });
+    
+    if (error) {
+      console.log('❌ Signup error:', error.message);
+      showAuthError(error.message);
+    } else {
+      console.log('✅ Signup successful, creating profile...');
+      currentUser = data.user;
+      
+      // Create user profile
+      const profileResult = await supabaseClient.from('profiles').insert({
+        id: currentUser.id,
+        username: username,
+        total_completed: 0
+      });
+      
+      console.log('📊 Profile creation result:', profileResult);
+      
+      await loadUserData();
+      console.log('🏠 Redirecting to home...');
+      setScreen('home');
+    }
+  } catch (err) {
+    console.error('💥 Unexpected error:', err);
+    showAuthError('An unexpected error occurred: ' + err.message);
   }
 }
 
