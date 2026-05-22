@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>DeutschFlow – German A1 Learning App</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0e0720;color:#fff;min-height:100vh;display:flex;justify-content:center}
@@ -105,496 +106,834 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .next-btn{width:100%;padding:15px;background:linear-gradient(135deg,#9050e0,#6030b0);border:none;border-radius:14px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-top:.75rem;transition:all .2s;letter-spacing:.2px;box-shadow:0 4px 16px rgba(122,64,200,0.35)}
 .next-btn:active{transform:scale(.98);opacity:.9}
 .next-btn:disabled{opacity:.35;cursor:default;box-shadow:none}
-.tts-notice{background:rgba(239,159,39,0.1);border:.5px solid rgba(239,159,39,0.3);border-radius:10px;padding:10px 14px;font-size:12px;color:rgba(239,159,39,0.9);margin-bottom:1rem;line-height:1.5}
-.result-header{background:linear-gradient(160deg,#1a0533 0%,#2d1060 100%);padding:1.25rem}
-.result-body{text-align:center;padding:2.5rem 1.5rem;flex:1;background:#0e0720}
-.result-emoji{font-size:52px;margin-bottom:1rem}
-.result-title{font-size:22px;font-weight:600;color:#e8d8ff;margin-bottom:6px}
-.result-sub{font-size:14px;color:rgba(200,170,255,0.6);margin-bottom:2rem;line-height:1.5}
-.result-score{display:flex;justify-content:center;gap:2rem;margin-bottom:2rem}
-.result-stat{text-align:center}
-.result-num{font-size:28px;font-weight:600;color:#a066e0}
-.result-label{font-size:12px;color:rgba(200,170,255,0.5)}
-.result-actions{display:flex;flex-direction:column;gap:10px}
-.btn-primary{padding:15px;background:linear-gradient(135deg,#9050e0,#6030b0);border:none;border-radius:14px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(122,64,200,0.35);letter-spacing:.2px}
-.btn-primary:active{transform:scale(.98);opacity:.9}
-.btn-secondary{padding:14px;background:#1a1030;border:1px solid rgba(160,100,255,0.35);border-radius:14px;color:#c8a0ff;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
-.btn-secondary:active{background:#2a1a50}
+.tts-notice{background:rgba(255,193,7,0.15);border:1px solid rgba(255,193,7,0.3);border-radius:12px;padding:12px;margin-bottom:1rem;font-size:12px;color:rgba(255,220,120,0.9);display:flex;align-items:center;gap:8px;line-height:1.5}
+.result-card{text-align:center;padding:2rem 1.5rem}
+.result-emoji{font-size:64px;margin-bottom:1rem}
+.result-score{font-size:48px;font-weight:700;background:linear-gradient(135deg,#c060ff,#7a40c8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.5rem}
+.result-title{font-size:20px;font-weight:600;color:#e8d8ff;margin-bottom:.5rem}
+.result-sub{font-size:13px;color:rgba(200,170,255,0.6);line-height:1.5;margin-bottom:2rem}
+.result-actions{display:flex;flex-direction:column;gap:10px;padding:0 1.25rem 2rem}
+
+/* AUTH STYLES */
+.auth-container{display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:100vh;padding:2rem 1.5rem;background:linear-gradient(160deg,#1a0533 0%,#2d1060 50%,#180a3d 100%)}
+.auth-box{width:100%;max-width:360px;background:rgba(255,255,255,0.06);border:1px solid rgba(160,100,255,0.25);border-radius:20px;padding:2rem;box-shadow:0 8px 32px rgba(0,0,0,0.3)}
+.auth-logo{text-align:center;margin-bottom:2rem}
+.auth-logo-icon{font-size:48px;margin-bottom:1rem}
+.auth-logo-text{font-size:24px;font-weight:600;color:#e8d8ff}
+.auth-title{font-size:18px;font-weight:600;color:#e8d8ff;text-align:center;margin-bottom:1.5rem}
+.auth-input{width:100%;padding:14px 16px;background:rgba(255,255,255,0.08);border:1px solid rgba(160,100,255,0.3);border-radius:12px;color:#fff;font-size:14px;margin-bottom:12px;font-family:inherit;transition:all .2s}
+.auth-input:focus{outline:none;border-color:rgba(160,100,255,0.6);background:rgba(255,255,255,0.12)}
+.auth-input::placeholder{color:rgba(200,170,255,0.4)}
+.auth-btn{width:100%;padding:15px;background:linear-gradient(135deg,#9050e0,#6030b0);border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;box-shadow:0 4px 16px rgba(122,64,200,0.35);font-family:inherit}
+.auth-btn:active{transform:scale(.98);opacity:.9}
+.auth-btn:disabled{opacity:.5;cursor:default}
+.auth-toggle{text-align:center;margin-top:1.5rem;font-size:13px;color:rgba(200,170,255,0.6)}
+.auth-toggle-link{color:#c8a0ff;cursor:pointer;text-decoration:underline}
+.auth-error{background:rgba(226,75,74,0.14);border:1px solid #e24b4a;border-radius:10px;padding:12px;margin-bottom:12px;font-size:13px;color:#f09595;text-align:center}
+.logout-btn{background:rgba(226,75,74,0.2);border:1px solid rgba(226,75,74,0.4);color:#f09595}
+.logout-btn:hover{background:rgba(226,75,74,0.3)}
+
+/* LEADERBOARD STYLES */
+.leaderboard-container{padding:1.25rem;flex:1;background:#0e0720;overflow-y:auto}
+.leaderboard-podium{display:flex;align-items:flex-end;justify-content:center;gap:10px;margin-bottom:2rem;padding:1rem 0}
+.podium-place{flex:1;max-width:100px;text-align:center}
+.podium-rank{width:60px;height:60px;margin:0 auto 8px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;border:2px solid}
+.podium-place.first .podium-rank{background:linear-gradient(135deg,#ffd700,#ffed4e);color:#8b6508;border-color:#ffd700;box-shadow:0 0 20px rgba(255,215,0,0.5)}
+.podium-place.second .podium-rank{background:linear-gradient(135deg,#c0c0c0,#e8e8e8);color:#666;border-color:#c0c0c0}
+.podium-place.third .podium-rank{background:linear-gradient(135deg,#cd7f32,#e9a86e);color:#4a3018;border-color:#cd7f32}
+.podium-name{font-size:12px;color:#e8d8ff;font-weight:500;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.podium-score{font-size:16px;color:#c8a0ff;font-weight:600}
+.leaderboard-list{display:flex;flex-direction:column;gap:8px}
+.leaderboard-item{background:#1a1030;border:1px solid rgba(160,100,255,0.18);border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:12px}
+.leaderboard-item.current-user{border-color:#9050e0;background:rgba(144,80,224,0.1)}
+.lb-rank{width:32px;height:32px;border-radius:50%;background:rgba(160,100,255,0.2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#c8a0ff;flex-shrink:0}
+.lb-info{flex:1;min-width:0}
+.lb-name{font-size:14px;font-weight:500;color:#e8d8ff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-meta{font-size:11px;color:rgba(200,170,255,0.5);margin-top:2px}
+.lb-score{font-size:16px;font-weight:600;color:#c8a0ff}
+.no-data{text-align:center;padding:3rem 1rem;color:rgba(200,170,255,0.5);font-size:14px}
 </style>
 </head>
 <body>
-<div class="app" id="app">
+<div class="app">
 
-  <!-- HOME -->
-  <div class="screen active" id="screen-home">
-    <div class="home-header">
-      <div class="app-brand">
-        <div class="brand-icon">🇩🇪</div>
-        <span class="brand-name">DeutschFlow</span>
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- AUTH SCREEN -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<div class="screen active" id="screen-auth">
+  <div class="auth-container">
+    <div class="auth-box">
+      <div class="auth-logo">
+        <div class="auth-logo-icon">🇩🇪</div>
+        <div class="auth-logo-text">DeutschFlow</div>
       </div>
-      <div class="home-title">Guten Morgen! 👋<br>Let's learn German.</div>
-      <div class="home-sub">A1 level · Listen &amp; understand</div>
-      <div class="progress-ring">
-        <div class="ring-stat"><div class="ring-num" id="stat-done">0</div><div class="ring-label">Levels done</div></div>
-        <div class="ring-divider"></div>
-        <div class="ring-stat"><div class="ring-num">20</div><div class="ring-label">Subjects</div></div>
-        <div class="ring-divider"></div>
-        <div class="ring-stat"><div class="ring-num" id="stat-pct">0%</div><div class="ring-label">Progress</div></div>
-      </div>
-    </div>
-    <div class="subjects-section">
-      <div class="section-label">All Subjects</div>
-      <div class="subject-grid" id="subject-list"></div>
-    </div>
-  </div>
-
-  <!-- SUBJECT -->
-  <div class="screen" id="screen-subject">
-    <div class="subject-header">
-      <div class="nav-bar">
-        <button class="back-btn" onclick="showHome()"><i class="ti ti-arrow-left"></i> All subjects</button>
-        <button class="home-nav-btn" onclick="showHome()" title="Home"><i class="ti ti-home"></i></button>
-      </div>
-      <div class="subj-hero">
-        <div class="subj-big-icon" id="subj-big-icon"></div>
-        <div><div class="subj-title" id="subj-title"></div><div class="subj-desc" id="subj-desc"></div></div>
-      </div>
-    </div>
-    <div class="levels-container" id="levels-list"></div>
-  </div>
-
-  <!-- LESSON -->
-  <div class="screen" id="screen-lesson">
-    <div class="lesson-header">
-      <div class="nav-bar">
-        <button class="back-btn" onclick="stopAndGoBack()"><i class="ti ti-arrow-left"></i> Back</button>
-        <div><div class="lesson-title" id="lesson-title"></div><div class="lesson-level" id="lesson-level"></div></div>
-        <button class="home-nav-btn" onclick="showHome()" title="Home"><i class="ti ti-home"></i></button>
-      </div>
-      <div class="audio-player">
-        <div class="audio-topic-label" id="audio-topic"></div>
-        <div class="speakers" id="speakers-row"></div>
-        <div class="waveform" id="waveform"></div>
-        <div class="audio-controls">
-          <button class="play-btn" id="play-btn" onclick="togglePlay()"><i class="ti ti-player-play" id="play-icon"></i></button>
-          <div class="audio-progress"><div class="audio-fill" id="audio-fill" style="width:0%"></div></div>
-          <div class="audio-time" id="audio-time">0:00</div>
+      <div id="auth-error" class="auth-error" style="display:none"></div>
+      <div id="auth-form-login">
+        <div class="auth-title">Welcome back!</div>
+        <input type="email" id="login-email" class="auth-input" placeholder="Email" autocomplete="email">
+        <input type="password" id="login-password" class="auth-input" placeholder="Password" autocomplete="current-password">
+        <button class="auth-btn" onclick="handleLogin()">Log In</button>
+        <div class="auth-toggle">
+          Don't have an account? <span class="auth-toggle-link" onclick="toggleAuthMode()">Sign up</span>
         </div>
-        <div class="plays-left">Plays remaining: <span id="plays-count">2</span> of 2</div>
-        <div class="now-speaking" id="now-speaking"></div>
       </div>
-    </div>
-    <div class="quiz-section" id="quiz-section"></div>
-  </div>
-
-  <!-- RESULT -->
-  <div class="screen" id="screen-result">
-    <div class="result-header">
-      <div class="nav-bar">
-        <button class="back-btn" onclick="showSubject(currentSubjectIdx)"><i class="ti ti-arrow-left"></i> Subject</button>
-        <button class="home-nav-btn" onclick="showHome()" title="Home"><i class="ti ti-home"></i></button>
-      </div>
-    </div>
-    <div class="result-body">
-      <div class="result-emoji" id="result-emoji">⭐</div>
-      <div class="result-title" id="result-title">Level complete!</div>
-      <div class="result-sub" id="result-sub"></div>
-      <div class="result-score">
-        <div class="result-stat"><div class="result-num" id="result-correct">3</div><div class="result-label">Correct</div></div>
-        <div class="result-stat"><div class="result-num" id="result-total">3</div><div class="result-label">Questions</div></div>
-        <div class="result-stat"><div class="result-num" id="result-pct">100%</div><div class="result-label">Score</div></div>
-      </div>
-      <div class="result-actions">
-        <button class="btn-primary" id="next-level-btn" onclick="goNextLevel()">Continue to next level <i class="ti ti-arrow-right"></i></button>
-        <button class="btn-secondary" onclick="replayLesson()"><i class="ti ti-refresh"></i> Replay this level</button>
-        <button class="btn-secondary" onclick="showHome()"><i class="ti ti-home"></i> Back to home</button>
+      <div id="auth-form-signup" style="display:none">
+        <div class="auth-title">Create Account</div>
+        <input type="text" id="signup-username" class="auth-input" placeholder="Username" autocomplete="username">
+        <input type="email" id="signup-email" class="auth-input" placeholder="Email" autocomplete="email">
+        <input type="password" id="signup-password" class="auth-input" placeholder="Password" autocomplete="new-password">
+        <button class="auth-btn" onclick="handleSignup()">Sign Up</button>
+        <div class="auth-toggle">
+          Already have an account? <span class="auth-toggle-link" onclick="toggleAuthMode()">Log in</span>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- HOME SCREEN -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-home">
+  <div class="home-header">
+    <div class="app-brand">
+      <div class="brand-icon">🇩🇪</div>
+      <div class="brand-name">DeutschFlow</div>
+    </div>
+    <div class="home-title">Start learning German</div>
+    <div class="home-sub">Master A1 level through conversations</div>
+    <div class="progress-ring">
+      <div class="ring-stat">
+        <div class="ring-num" id="total-completed">0</div>
+        <div class="ring-label">Completed</div>
+      </div>
+      <div class="ring-divider"></div>
+      <div class="ring-stat">
+        <div class="ring-num" id="total-subjects">20</div>
+        <div class="ring-label">Subjects</div>
+      </div>
+      <div class="ring-divider"></div>
+      <div class="ring-stat">
+        <div class="ring-num">400</div>
+        <div class="ring-label">Total Levels</div>
+      </div>
+    </div>
+  </div>
+  <div class="subjects-section">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
+      <div class="section-label">Your Subjects</div>
+      <button class="home-nav-btn" onclick="showLeaderboard()" title="Leaderboard"><i class="ti ti-trophy"></i></button>
+    </div>
+    <div class="subject-grid" id="subject-list"></div>
+    <button class="auth-btn logout-btn" style="margin-top:1.5rem" onclick="handleLogout()">Log Out</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- SUBJECT SCREEN -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-subject">
+  <div class="subject-header">
+    <div class="nav-bar">
+      <button class="back-btn" onclick="showHome()"><i class="ti ti-arrow-left"></i> Back</button>
+      <button class="home-nav-btn" onclick="showLeaderboard()"><i class="ti ti-trophy"></i></button>
+    </div>
+    <div class="subj-hero">
+      <div class="subj-big-icon" id="subj-big-icon">👋</div>
+      <div>
+        <div class="subj-title" id="subj-title">Greetings</div>
+        <div class="subj-desc" id="subj-desc">Say hello in German</div>
+      </div>
+    </div>
+  </div>
+  <div class="levels-container" id="levels-list"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- LESSON SCREEN -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-lesson">
+  <div class="lesson-header">
+    <div class="nav-bar">
+      <button class="back-btn" onclick="stopAndGoBack()"><i class="ti ti-arrow-left"></i> Back</button>
+    </div>
+    <div class="lesson-title" id="lesson-title">Subject Name</div>
+    <div class="lesson-level" id="lesson-level">Level 1 of 20</div>
+    <div class="audio-player">
+      <div class="audio-topic-label" id="audio-topic">🎧 Conversation topic</div>
+      <div class="speakers" id="speakers-row"></div>
+      <div class="waveform" id="waveform"></div>
+      <div class="audio-controls">
+        <button class="play-btn" id="play-btn" onclick="togglePlay()"><i class="ti ti-player-play-filled"></i></button>
+        <div class="audio-progress"><div class="audio-fill" id="audio-fill"></div></div>
+        <div class="audio-time" id="audio-time">0:00</div>
+      </div>
+      <div class="plays-left">Plays remaining: <span id="plays-count">2</span></div>
+      <div class="now-speaking" id="now-speaking"></div>
+    </div>
+  </div>
+  <div class="quiz-section" id="quiz-section"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- RESULT SCREEN -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-result">
+  <div class="lesson-header">
+    <div class="nav-bar">
+      <button class="back-btn" onclick="showHome()"><i class="ti ti-arrow-left"></i> Home</button>
+    </div>
+  </div>
+  <div class="result-card">
+    <div class="result-emoji" id="result-emoji">🏆</div>
+    <div class="result-score"><span id="result-correct">3</span>/<span id="result-total">3</span></div>
+    <div style="text-align:center;font-size:14px;color:rgba(200,170,255,0.6);margin-bottom:1rem" id="result-pct">100%</div>
+    <div class="result-title" id="result-title">Perfect score!</div>
+    <div class="result-sub" id="result-sub">You passed level 1</div>
+  </div>
+  <div class="result-actions">
+    <button class="next-btn" id="next-level-btn" onclick="goNextLevel()">Next level <i class="ti ti-arrow-right"></i></button>
+    <button class="back-btn" style="justify-content:center" onclick="replayLesson()"><i class="ti ti-refresh"></i> Replay lesson</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- LEADERBOARD SCREEN -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen-leaderboard">
+  <div class="subject-header">
+    <div class="nav-bar">
+      <button class="back-btn" onclick="showHome()"><i class="ti ti-arrow-left"></i> Back</button>
+    </div>
+    <div class="subj-title">🏆 Leaderboard</div>
+    <div class="subj-desc">Top learners this month</div>
+  </div>
+  <div class="leaderboard-container">
+    <div class="leaderboard-podium" id="leaderboard-podium"></div>
+    <div class="leaderboard-list" id="leaderboard-list"></div>
+  </div>
+</div>
+
+</div>
+
 <script>
-// ── DATA ──────────────────────────────────────────────────────────────────────
-const SUBJECTS=[
-  {icon:'👋',name:'Greetings & Introductions',desc:'Say hello, introduce yourself',color:'#7a40c8',bg:'rgba(122,64,200,0.2)',progress:0,unlocked:true},
-  {icon:'👨‍👩‍👧',name:'Family & Friends',desc:'Talk about your family',color:'#1d9e75',bg:'rgba(29,158,117,0.2)',progress:0,unlocked:true},
-  {icon:'☕',name:'At the Café',desc:'Order drinks and snacks',color:'#ef9f27',bg:'rgba(239,159,39,0.2)',progress:0,unlocked:true},
-  {icon:'🏠',name:'Home & Living',desc:'Describe where you live',color:'#378add',bg:'rgba(55,138,221,0.2)',progress:0,unlocked:true},
-  {icon:'🛒',name:'Shopping',desc:'Buy things at the store',color:'#d4537e',bg:'rgba(212,83,126,0.2)',progress:0,unlocked:true},
-  {icon:'🚌',name:'Getting Around',desc:'Use public transport',color:'#639922',bg:'rgba(99,153,34,0.2)',progress:0,unlocked:false},
-  {icon:'🍽️',name:'Food & Restaurants',desc:'Order meals, discuss food',color:'#ba7517',bg:'rgba(186,117,23,0.2)',progress:0,unlocked:false},
-  {icon:'⏰',name:'Time & Dates',desc:'Tell time, plan meetings',color:'#7a40c8',bg:'rgba(122,64,200,0.2)',progress:0,unlocked:false},
-  {icon:'🏥',name:'Health & Body',desc:'Describe how you feel',color:'#e24b4a',bg:'rgba(226,75,74,0.2)',progress:0,unlocked:false},
-  {icon:'💼',name:'Work & Jobs',desc:'Discuss your profession',color:'#1d9e75',bg:'rgba(29,158,117,0.2)',progress:0,unlocked:false},
-  {icon:'🎓',name:'School & Learning',desc:'Talk about studying',color:'#378add',bg:'rgba(55,138,221,0.2)',progress:0,unlocked:false},
-  {icon:'🌤️',name:'Weather',desc:'Describe the weather',color:'#ef9f27',bg:'rgba(239,159,39,0.2)',progress:0,unlocked:false},
-  {icon:'🎉',name:'Hobbies & Free Time',desc:'What do you do for fun',color:'#d4537e',bg:'rgba(212,83,126,0.2)',progress:0,unlocked:false},
-  {icon:'📱',name:'Technology',desc:'Talk about devices & apps',color:'#7a40c8',bg:'rgba(122,64,200,0.2)',progress:0,unlocked:false},
-  {icon:'🌍',name:'Travel & Holidays',desc:'Plan trips and vacations',color:'#639922',bg:'rgba(99,153,34,0.2)',progress:0,unlocked:false},
-  {icon:'🏪',name:'In Town',desc:'Find places in the city',color:'#ba7517',bg:'rgba(186,117,23,0.2)',progress:0,unlocked:false},
-  {icon:'🎭',name:'Feelings & Emotions',desc:'Express how you feel',color:'#e24b4a',bg:'rgba(226,75,74,0.2)',progress:0,unlocked:false},
-  {icon:'🌿',name:'Nature & Animals',desc:'Plants, animals, outdoors',color:'#1d9e75',bg:'rgba(29,158,117,0.2)',progress:0,unlocked:false},
-  {icon:'🎵',name:'Music & Arts',desc:'Talk about culture',color:'#378add',bg:'rgba(55,138,221,0.2)',progress:0,unlocked:false},
-  {icon:'🍳',name:'Cooking at Home',desc:'Recipes and kitchen talk',color:'#ef9f27',bg:'rgba(239,159,39,0.2)',progress:0,unlocked:false},
-];
+// ══════════════════════════════════════════════════════════════════════════════
+// SUPABASE SETUP
+// ══════════════════════════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://aigwqkascxvwrjbbzorc.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpZ3dxa2FzY3h2d3JqYmJ6b3JjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY4OTI3MjIsImV4cCI6MjA1MjQ2ODcyMn0.sb_publishable_KFBHKqixyPt6t88Om1sVYg_YmYHBM-k';
 
-const LEVEL_TOPICS=['Basic conversation','Simple phrases','Meeting people','Short dialogue','Expanded vocab','Asking questions','Answering questions','Two speakers','Natural pace','Daily scenarios','Complex replies','Slang & tone','Multiple topics','Mixed vocab','Longer exchanges','Rapid speech','Idiomatic phrases','Cultural context','Near-natural speed','Full A1 mastery'];
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Each line: { speaker index, german text, pause after in ms }
-const CONVOS=[
-  {
-    topic:'Basic hello & goodbye',
-    speakers:[{name:'Anna',dot:'#a066e0',pitch:1.2,rate:0.9},{name:'Tom',dot:'#4ab8e8',pitch:0.85,rate:0.9}],
-    lines:[
-      {s:0,text:'Hallo! Guten Morgen!',pause:600},
-      {s:1,text:'Guten Morgen! Wie geht es dir?',pause:600},
-      {s:0,text:'Gut, danke! Und dir?',pause:600},
-      {s:1,text:'Mir geht es auch gut, danke.',pause:600},
-      {s:0,text:'Schön. Auf Wiedersehen!',pause:600},
-      {s:1,text:'Tschüss! Bis bald!',pause:400},
-    ],
-    qs:[
-      {q:'What does Anna say first?',opts:['Guten Morgen','Guten Abend','Gute Nacht','Auf Wiedersehen'],ans:0},
-      {q:'How does Tom respond to "Wie geht es dir?"',opts:['Er sagt Tschüss','Er antwortet "Gut, danke"','Er fragt nach dem Weg','Er bestellt Kaffee'],ans:1},
-      {q:'How do they say goodbye?',opts:['Bis morgen','Auf Wiedersehen und Tschüss','Guten Tag','Danke schön'],ans:1},
-    ]
-  },
-  {
-    topic:'Introducing yourself',
-    speakers:[{name:'Lisa',dot:'#ff80b0',pitch:1.25,rate:0.88},{name:'Max',dot:'#60c880',pitch:0.8,rate:0.9}],
-    lines:[
-      {s:0,text:'Hallo! Ich heiße Lisa. Wie heißt du?',pause:600},
-      {s:1,text:'Hallo Lisa! Ich heiße Max. Woher kommst du?',pause:600},
-      {s:0,text:'Ich komme aus Wien. Und du?',pause:600},
-      {s:1,text:'Ich komme aus Berlin. Wie alt bist du?',pause:600},
-      {s:0,text:'Ich bin zwanzig Jahre alt.',pause:600},
-      {s:1,text:'Ich bin zweiundzwanzig. Schön, dich kennenzulernen!',pause:400},
-    ],
-    qs:[
-      {q:"What is the woman's name?",opts:['Maria','Lisa','Anna','Petra'],ans:1},
-      {q:'Where is Max from?',opts:['Wien','Zürich','Berlin','München'],ans:2},
-      {q:'How old is Lisa?',opts:['Achtzehn','Zwanzig','Zweiundzwanzig','Fünfundzwanzig'],ans:1},
-    ]
-  },
-  {
-    topic:'Ordering at a café',
-    speakers:[{name:'Sarah',dot:'#ffa040',pitch:1.2,rate:0.9},{name:'Kellner',dot:'#60c880',pitch:0.78,rate:0.88}],
-    lines:[
-      {s:1,text:'Guten Tag! Was darf es sein?',pause:600},
-      {s:0,text:'Guten Tag! Ich möchte einen Kaffee, bitte.',pause:600},
-      {s:1,text:'Möchten Sie auch etwas essen?',pause:600},
-      {s:0,text:'Ja, ich nehme ein Stück Kuchen.',pause:600},
-      {s:1,text:'Das macht drei Euro fünfzig.',pause:600},
-      {s:0,text:'Danke schön!',pause:400},
-    ],
-    qs:[
-      {q:'What does Sarah order to drink?',opts:['Tee','Kaffee','Wasser','Saft'],ans:1},
-      {q:'What does she order to eat?',opts:['Ein Sandwich','Einen Salat','Ein Stück Kuchen','Nichts'],ans:2},
-      {q:'How much does it cost?',opts:['Zwei Euro','Drei Euro fünfzig','Fünf Euro','Sieben Euro'],ans:1},
-    ]
-  },
-  {
-    topic:'Talking about family',
-    speakers:[{name:'Mia',dot:'#a066e0',pitch:1.22,rate:0.88},{name:'Ben',dot:'#4ab8e8',pitch:0.82,rate:0.9}],
-    lines:[
-      {s:1,text:'Hast du Geschwister?',pause:600},
-      {s:0,text:'Ja, ich habe einen Bruder und eine Schwester.',pause:600},
-      {s:1,text:'Wo wohnen deine Eltern?',pause:600},
-      {s:0,text:'Meine Eltern wohnen in München.',pause:600},
-      {s:1,text:'Was macht dein Vater beruflich?',pause:600},
-      {s:0,text:'Mein Vater ist Lehrer. Und deine Familie?',pause:400},
-    ],
-    qs:[
-      {q:'How many siblings does Mia have?',opts:['Keine','Nur einen Bruder','Einen Bruder und eine Schwester','Zwei Schwestern'],ans:2},
-      {q:"Where do Mia's parents live?",opts:['Hamburg','München','Berlin','Wien'],ans:1},
-      {q:"What is Mia's father's job?",opts:['Arzt','Lehrer','Koch','Ingenieur'],ans:1},
-    ]
-  },
-  {
-    topic:'Describing your home',
-    speakers:[{name:'Julia',dot:'#ff80b0',pitch:1.18,rate:0.88},{name:'Klaus',dot:'#ffa040',pitch:0.8,rate:0.9}],
-    lines:[
-      {s:1,text:'Wo wohnst du?',pause:600},
-      {s:0,text:'Ich wohne in einer Wohnung in der Stadtmitte.',pause:600},
-      {s:1,text:'Wie viele Zimmer hat deine Wohnung?',pause:600},
-      {s:0,text:'Sie hat drei Zimmer, eine Küche und ein Bad.',pause:600},
-      {s:1,text:'Ist die Wohnung groß?',pause:600},
-      {s:0,text:'Ja, sie ist ziemlich groß und sehr hell.',pause:400},
-    ],
-    qs:[
-      {q:'Where does Julia live?',opts:['Auf dem Land','In einem Haus','In der Stadtmitte','Bei ihren Eltern'],ans:2},
-      {q:'How many rooms does her apartment have?',opts:['Zwei','Drei','Vier','Fünf'],ans:1},
-      {q:'How does she describe her apartment?',opts:['Klein und dunkel','Groß und hell','Alt und billig','Neu und teuer'],ans:1},
-    ]
-  },
-];
+let currentUser = null;
+let userProgress = {};
 
-// ── STATE ─────────────────────────────────────────────────────────────────────
-let currentSubjectIdx=0,currentLevelIdx=0,playsLeft=2,isPlaying=false;
-let currentQ=0,answers=[],quizUnlocked=false;
-let waveInterval=null,progressInterval=null;
-let ttsSupported=false,voices=[];
-let currentLineIdx=0,totalDuration=0,elapsedTime=0,startTime=0;
-
-// ── TTS SETUP ─────────────────────────────────────────────────────────────────
-function initTTS(){
-  if(!('speechSynthesis' in window)){ttsSupported=false;return;}
-  ttsSupported=true;
-  function loadVoices(){
-    voices=window.speechSynthesis.getVoices();
+// ══════════════════════════════════════════════════════════════════════════════
+// AUTH FUNCTIONS
+// ══════════════════════════════════════════════════════════════════════════════
+async function handleLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value.trim();
+  
+  if (!email || !password) {
+    showAuthError('Please enter email and password');
+    return;
   }
-  loadVoices();
-  window.speechSynthesis.onvoiceschanged=loadVoices;
-}
-
-function getVoice(preferFemale){
-  // Try German voices first
-  const deVoices=voices.filter(v=>v.lang.startsWith('de'));
-  if(deVoices.length>0){
-    if(preferFemale){
-      const f=deVoices.find(v=>/female|frau|anna|helena|marlena|steffi/i.test(v.name));
-      if(f)return f;
-      return deVoices[0];
-    } else {
-      const m=deVoices.find(v=>/male|mann|hans|fritz|stefan|markus/i.test(v.name));
-      if(m)return m;
-      return deVoices[deVoices.length>1?1:0];
-    }
+  
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  
+  if (error) {
+    showAuthError(error.message);
+  } else {
+    currentUser = data.user;
+    await loadUserData();
+    setScreen('home');
   }
-  // Fallback: any voice, alternate by index
-  return voices[preferFemale?0:Math.min(1,voices.length-1)]||null;
 }
 
-// ── PLAYBACK ──────────────────────────────────────────────────────────────────
-function getConvo(){return CONVOS[Math.min(currentLevelIdx,CONVOS.length-1)];}
-
-function estimateDuration(convo){
-  // Rough: 80ms per char + pause
-  return convo.lines.reduce((a,l)=>a+(l.text.length*80)+l.pause,0);
-}
-
-function stopSpeech(){
-  if(ttsSupported)window.speechSynthesis.cancel();
-  clearInterval(waveInterval);clearInterval(progressInterval);
-  resetWaveBars();
-  isPlaying=false;updatePlayIcon();
-  document.getElementById('now-speaking').textContent='';
-}
-
-function togglePlay(){
-  if(isPlaying){stopSpeech();return;}
-  if(playsLeft<=0)return;
-  playsLeft--;
-  document.getElementById('plays-count').textContent=playsLeft;
-  document.getElementById('audio-fill').style.width='0%';
-  document.getElementById('audio-time').textContent='0:00';
-  elapsedTime=0;startTime=Date.now();
-  isPlaying=true;updatePlayIcon();
-  startWaveAnimation();
-  startProgressBar();
-  speakConversation();
-}
-
-function speakConversation(){
-  const convo=getConvo();
-  let lineIdx=0;
-  function speakLine(){
-    if(lineIdx>=convo.lines.length){
-      // Done
-      setTimeout(()=>{
-        stopSpeech();
-        document.getElementById('audio-fill').style.width='100%';
-        highlightSpeaker(-1);
-        if(playsLeft===0){quizUnlocked=true;renderQuiz();}
-      },300);
-      return;
-    }
-    const line=convo.lines[lineIdx];
-    highlightSpeaker(line.s);
-    document.getElementById('now-speaking').textContent=convo.speakers[line.s].name+' is speaking...';
-    if(ttsSupported){
-      const utt=new SpeechSynthesisUtterance(line.text);
-      utt.lang='de-DE';
-      const spk=convo.speakers[line.s];
-      const v=getVoice(spk.pitch>1);
-      if(v)utt.voice=v;
-      utt.pitch=spk.pitch;
-      utt.rate=spk.rate;
-      utt.volume=1;
-      utt.onend=()=>{
-        if(!isPlaying)return;
-        lineIdx++;
-        setTimeout(speakLine,line.pause);
-      };
-      utt.onerror=()=>{lineIdx++;setTimeout(speakLine,line.pause);};
-      window.speechSynthesis.speak(utt);
-    } else {
-      // No TTS: simulate timing
-      const dur=line.text.length*80+line.pause;
-      setTimeout(()=>{if(!isPlaying)return;lineIdx++;speakLine();},dur);
-    }
+async function handleSignup() {
+  const username = document.getElementById('signup-username').value.trim();
+  const email = document.getElementById('signup-email').value.trim();
+  const password = document.getElementById('signup-password').value.trim();
+  
+  if (!username || !email || !password) {
+    showAuthError('Please fill in all fields');
+    return;
   }
-  speakLine();
-}
-
-function highlightSpeaker(idx){
-  document.querySelectorAll('.speaker-chip').forEach((c,i)=>{
-    c.classList.toggle('speaking',i===idx);
+  
+  if (password.length < 6) {
+    showAuthError('Password must be at least 6 characters');
+    return;
+  }
+  
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { username }
+    }
   });
-}
-
-function startWaveAnimation(){
-  waveInterval=setInterval(()=>{
-    if(!isPlaying){clearInterval(waveInterval);return;}
-    document.querySelectorAll('.wave-bar').forEach(b=>{
-      b.classList.toggle('active',Math.random()>.45);
-      b.style.height=(8+Math.random()*24)+'px';
+  
+  if (error) {
+    showAuthError(error.message);
+  } else {
+    currentUser = data.user;
+    // Create user profile
+    await supabase.from('profiles').insert({
+      id: currentUser.id,
+      username: username,
+      total_completed: 0
     });
-  },130);
+    await loadUserData();
+    setScreen('home');
+  }
 }
 
-function startProgressBar(){
-  const convo=getConvo();
-  totalDuration=estimateDuration(convo);
-  progressInterval=setInterval(()=>{
-    if(!isPlaying){clearInterval(progressInterval);return;}
-    elapsedTime=Date.now()-startTime;
-    const pct=Math.min(99,Math.round((elapsedTime/totalDuration)*100));
-    document.getElementById('audio-fill').style.width=pct+'%';
-    const sec=Math.floor(elapsedTime/1000);
-    document.getElementById('audio-time').textContent=Math.floor(sec/60)+':'+(('0'+(sec%60)).slice(-2));
-  },200);
+async function handleLogout() {
+  await supabase.auth.signOut();
+  currentUser = null;
+  userProgress = {};
+  setScreen('auth');
 }
 
-function resetWaveBars(){document.querySelectorAll('.wave-bar').forEach(b=>{b.classList.remove('active');});}
-function updatePlayIcon(){
-  document.getElementById('play-icon').className=isPlaying?'ti ti-player-pause':'ti ti-player-play';
-  const btn=document.getElementById('play-btn');
-  btn.disabled=(!isPlaying&&playsLeft<=0&&!quizUnlocked);
+function toggleAuthMode() {
+  const login = document.getElementById('auth-form-login');
+  const signup = document.getElementById('auth-form-signup');
+  if (login.style.display === 'none') {
+    login.style.display = 'block';
+    signup.style.display = 'none';
+  } else {
+    login.style.display = 'none';
+    signup.style.display = 'block';
+  }
+  hideAuthError();
 }
 
-// ── SCREENS ───────────────────────────────────────────────────────────────────
-function updateHomeStats(){
-  const total=SUBJECTS.reduce((a,s)=>a+s.progress,0);
-  const pct=Math.round((total/(SUBJECTS.length*20))*100);
-  document.getElementById('stat-done').textContent=total;
-  document.getElementById('stat-pct').textContent=pct+'%';
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.style.display = 'block';
 }
 
-function buildSubjects(){
-  updateHomeStats();
-  const list=document.getElementById('subject-list');list.innerHTML='';
-  SUBJECTS.forEach((s,i)=>{
-    const pct=Math.round((s.progress/20)*100);
-    const card=document.createElement('div');
-    card.className='subject-card'+(s.unlocked?'':' locked');
-    card.innerHTML=`<div class="subject-icon" style="background:${s.bg}">${s.icon}</div>
+function hideAuthError() {
+  document.getElementById('auth-error').style.display = 'none';
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DATA LOADING
+// ══════════════════════════════════════════════════════════════════════════════
+async function loadUserData() {
+  // Load progress from Supabase
+  const { data, error } = await supabase
+    .from('user_progress')
+    .select('*')
+    .eq('user_id', currentUser.id);
+  
+  if (!error && data) {
+    userProgress = {};
+    data.forEach(row => {
+      const key = `${row.subject_index}_${row.level_index}`;
+      userProgress[key] = { completed: row.completed, score: row.score };
+    });
+  }
+  
+  buildSubjects();
+}
+
+async function saveProgress(subjectIdx, levelIdx, score) {
+  const key = `${subjectIdx}_${levelIdx}`;
+  userProgress[key] = { completed: true, score };
+  
+  // Save to Supabase
+  await supabase.from('user_progress').upsert({
+    user_id: currentUser.id,
+    subject_index: subjectIdx,
+    level_index: levelIdx,
+    completed: true,
+    score: score
+  });
+  
+  // Update total completed count
+  const totalCompleted = Object.keys(userProgress).length;
+  await supabase.from('profiles').update({
+    total_completed: totalCompleted
+  }).eq('id', currentUser.id);
+  
+  document.getElementById('total-completed').textContent = totalCompleted;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SUBJECTS DATA (20 subjects × 20 levels = 400 total)
+// ══════════════════════════════════════════════════════════════════════════════
+const SUBJECTS = [
+  { name: 'Greetings & Introductions', icon: '👋', bg: 'linear-gradient(135deg,#ff9a9e,#fecfef)', color: '#ff6b9d', desc: 'Say hello in German', unlocked: true },
+  { name: 'Family & Relationships', icon: '👨‍👩‍👧', bg: 'linear-gradient(135deg,#a18cd1,#fbc2eb)', color: '#b794f6', desc: 'Talk about your family', unlocked: true },
+  { name: 'Food & Drinks', icon: '🍽️', bg: 'linear-gradient(135deg,#ffecd2,#fcb69f)', color: '#ffb88c', desc: 'Order at restaurants', unlocked: true },
+  { name: 'Shopping & Money', icon: '🛍️', bg: 'linear-gradient(135deg,#fa709a,#fee140)', color: '#f093b0', desc: 'Shop and pay', unlocked: true },
+  { name: 'Travel & Transportation', icon: '✈️', bg: 'linear-gradient(135deg,#43e97b,#38f9d7)', color: '#4eeaa7', desc: 'Navigate cities', unlocked: true },
+  { name: 'Home & Living', icon: '🏠', bg: 'linear-gradient(135deg,#f093fb,#f5576c)', color: '#f298c0', desc: 'Describe your home', unlocked: true },
+  { name: 'Daily Routines', icon: '⏰', bg: 'linear-gradient(135deg,#4facfe,#00f2fe)', color: '#62c5ff', desc: 'Talk about your day', unlocked: true },
+  { name: 'Work & School', icon: '💼', bg: 'linear-gradient(135deg,#fa709a,#fee140)', color: '#f8a5b4', desc: 'Professional life', unlocked: true },
+  { name: 'Hobbies & Interests', icon: '🎨', bg: 'linear-gradient(135deg,#fbc2eb,#a6c1ee)', color: '#d4b7ed', desc: 'Share your interests', unlocked: true },
+  { name: 'Health & Body', icon: '💪', bg: 'linear-gradient(135deg,#fa709a,#fee140)', color: '#f8a5b4', desc: 'At the doctor', unlocked: true },
+  { name: 'Weather & Seasons', icon: '⛅', bg: 'linear-gradient(135deg,#a8edea,#fed6e3)', color: '#b8f0ee', desc: 'Talk about weather', unlocked: true },
+  { name: 'Numbers & Time', icon: '🔢', bg: 'linear-gradient(135deg,#ffecd2,#fcb69f)', color: '#ffb88c', desc: 'Count and tell time', unlocked: true },
+  { name: 'Directions & Locations', icon: '🗺️', bg: 'linear-gradient(135deg,#ff9a9e,#fecfef)', color: '#ff95b1', desc: 'Find your way', unlocked: true },
+  { name: 'Technology & Media', icon: '📱', bg: 'linear-gradient(135deg,#667eea,#764ba2)', color: '#7986f0', desc: 'Digital world', unlocked: true },
+  { name: 'Nature & Animals', icon: '🦋', bg: 'linear-gradient(135deg,#a8edea,#fed6e3)', color: '#b8f0ee', desc: 'Natural world', unlocked: true },
+  { name: 'Emotions & Feelings', icon: '😊', bg: 'linear-gradient(135deg,#fbc2eb,#a6c1ee)', color: '#d4b7ed', desc: 'Express yourself', unlocked: true },
+  { name: 'Celebrations & Events', icon: '🎉', bg: 'linear-gradient(135deg,#fa709a,#fee140)', color: '#f8a5b4', desc: 'Special occasions', unlocked: true },
+  { name: 'Clothing & Fashion', icon: '👗', bg: 'linear-gradient(135deg,#f093fb,#f5576c)', color: '#f298c0', desc: 'What to wear', unlocked: true },
+  { name: 'Sports & Activities', icon: '⚽', bg: 'linear-gradient(135deg,#43e97b,#38f9d7)', color: '#4eeaa7', desc: 'Get active', unlocked: true },
+  { name: 'Culture & Traditions', icon: '🎭', bg: 'linear-gradient(135deg,#a18cd1,#fbc2eb)', color: '#b794f6', desc: 'German culture', unlocked: true }
+];
+
+const LEVEL_TOPICS = [
+  'Basic greetings', 'Introducing yourself', 'How are you?', 'Nice to meet you', 'Goodbye phrases',
+  'Names & origins', 'Age & birthday', 'Phone numbers', 'Spelling names', 'Personal info',
+  'Where are you from?', 'Languages you speak', 'Occupations', 'Living situations', 'Asking questions',
+  'Making requests', 'Saying thank you', 'Apologizing', 'Asking for help', 'Small talk'
+];
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CONVERSATION STORAGE (Database structure for 400 conversations)
+// ══════════════════════════════════════════════════════════════════════════════
+// This will be stored in Supabase 'conversations' table
+// For now, we'll use a sample structure and fallback data
+
+async function getConversation(subjectIdx, levelIdx) {
+  // Try to fetch from Supabase
+  const { data, error } = await supabase
+    .from('conversations')
+    .select('*')
+    .eq('subject_index', subjectIdx)
+    .eq('level_index', levelIdx)
+    .single();
+  
+  if (!error && data) {
+    return data.content;
+  }
+  
+  // Fallback to sample conversation
+  return getSampleConversation(subjectIdx, levelIdx);
+}
+
+function getSampleConversation(subjectIdx, levelIdx) {
+  // Sample conversation structure (you'll populate 400 of these in Supabase)
+  return {
+    topic: `${SUBJECTS[subjectIdx]?.name || 'Topic'} - Level ${levelIdx + 1}`,
+    speakers: [
+      { name: 'Anna', voice: 'Google Deutsch', dot: '#ff6b9d' },
+      { name: 'Max', voice: 'Google Deutsch', dot: '#4facfe' }
+    ],
+    lines: [
+      { speaker: 0, text: 'Hallo! Wie heißt du?', en: 'Hello! What is your name?' },
+      { speaker: 1, text: 'Ich heiße Max. Und du?', en: 'My name is Max. And you?' },
+      { speaker: 0, text: 'Ich heiße Anna. Freut mich!', en: 'My name is Anna. Nice to meet you!' },
+      { speaker: 1, text: 'Freut mich auch!', en: 'Nice to meet you too!' }
+    ],
+    qs: [
+      { q: 'What does "Wie heißt du?" mean?', opts: ['How are you?', 'What is your name?', 'Where are you from?', 'Nice to meet you'], ans: 1 },
+      { q: 'How does Max introduce himself?', opts: ['Ich bin Max', 'Ich heiße Max', 'Mein Name Max', 'Hallo Max'], ans: 1 },
+      { q: 'What does "Freut mich" express?', opts: ['Goodbye', 'Thank you', 'Nice to meet you', 'How are you'], ans: 2 }
+    ]
+  };
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SPEECH SYNTHESIS
+// ══════════════════════════════════════════════════════════════════════════════
+let synth, voices = [], ttsSupported = false, currentUtterance = null, isPlaying = false;
+let playInterval, lineIdx = 0, playsLeft = 2, currentSubjectIdx = 0, currentLevelIdx = 0;
+let currentQ = 0, answers = [], quizUnlocked = false, currentConvo = null;
+
+function initTTS() {
+  synth = window.speechSynthesis;
+  if (!synth) return;
+  ttsSupported = true;
+  const load = () => {
+    voices = synth.getVoices();
+    if (voices.length === 0) setTimeout(load, 100);
+  };
+  load();
+  if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = load;
+}
+
+function stopSpeech() {
+  if (synth) synth.cancel();
+  isPlaying = false;
+  if (playInterval) clearInterval(playInterval);
+  updatePlayIcon();
+  document.querySelectorAll('.speaker-chip').forEach(c => c.classList.remove('speaking'));
+  document.querySelectorAll('.wave-bar').forEach(b => b.classList.remove('active'));
+}
+
+function updatePlayIcon() {
+  const btn = document.getElementById('play-btn');
+  if (!btn) return;
+  btn.innerHTML = isPlaying ? '<i class="ti ti-player-pause-filled"></i>' : '<i class="ti ti-player-play-filled"></i>';
+  btn.disabled = playsLeft <= 0;
+}
+
+async function togglePlay() {
+  if (!currentConvo) return;
+  if (isPlaying) { stopSpeech(); return; }
+  if (playsLeft <= 0) return;
+  
+  playsLeft--;
+  document.getElementById('plays-count').textContent = playsLeft;
+  if (playsLeft === 0 && !quizUnlocked) { quizUnlocked = true; setTimeout(() => renderQuiz(), 500); }
+  
+  isPlaying = true;
+  updatePlayIcon();
+  lineIdx = 0;
+  
+  const lines = currentConvo.lines;
+  const totalDuration = lines.reduce((sum, l) => sum + l.text.split(' ').length * 400 + 800, 0);
+  let elapsed = 0;
+  
+  playInterval = setInterval(() => {
+    elapsed += 100;
+    const pct = Math.min((elapsed / totalDuration) * 100, 100);
+    document.getElementById('audio-fill').style.width = pct + '%';
+    document.getElementById('audio-time').textContent = Math.floor(elapsed / 1000) + ':' + String(Math.floor((elapsed % 60000) / 1000)).padStart(2, '0');
+    document.querySelectorAll('.wave-bar').forEach((b, i) => {
+      if (Math.random() > 0.7) b.style.height = (8 + Math.random() * 32) + 'px';
+      b.classList.toggle('active', Math.random() > 0.5);
+    });
+  }, 100);
+  
+  for (let i = 0; i < lines.length; i++) {
+    if (!isPlaying) break;
+    const line = lines[i];
+    const chips = document.querySelectorAll('.speaker-chip');
+    chips.forEach((c, idx) => c.classList.toggle('speaking', idx === line.speaker));
+    document.getElementById('now-speaking').textContent = currentConvo.speakers[line.speaker].name + ': ' + line.en;
+    
+    if (ttsSupported) {
+      currentUtterance = new SpeechSynthesisUtterance(line.text);
+      currentUtterance.lang = 'de-DE';
+      const germanVoices = voices.filter(v => v.lang.startsWith('de'));
+      if (germanVoices.length > 0) currentUtterance.voice = germanVoices[0];
+      synth.speak(currentUtterance);
+      await new Promise(resolve => {
+        currentUtterance.onend = resolve;
+        setTimeout(resolve, line.text.split(' ').length * 400 + 800);
+      });
+    } else {
+      await new Promise(resolve => setTimeout(resolve, line.text.split(' ').length * 400 + 800));
+    }
+    await new Promise(resolve => setTimeout(resolve, 600));
+  }
+  
+  stopSpeech();
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// UI FUNCTIONS
+// ══════════════════════════════════════════════════════════════════════════════
+function buildSubjects() {
+  const list = document.getElementById('subject-list');
+  list.innerHTML = '';
+  
+  let totalCompleted = 0;
+  
+  SUBJECTS.forEach((s, i) => {
+    let completed = 0;
+    for (let j = 0; j < 20; j++) {
+      const key = `${i}_${j}`;
+      if (userProgress[key]?.completed) completed++;
+    }
+    totalCompleted += completed;
+    
+    const pct = Math.round((completed / 20) * 100);
+    const card = document.createElement('div');
+    card.className = 'subject-card' + (s.unlocked ? '' : ' locked');
+    card.innerHTML = `
+    <div class="subject-icon" style="background:${s.bg}">${s.icon}</div>
     <div class="subject-info">
       <div class="subject-name">${s.name}</div>
-      <div class="subject-meta">${s.progress}/20 levels · ${pct}%</div>
+      <div class="subject-meta">${completed}/20 levels · ${pct}%</div>
       <div class="subject-progress-bar"><div class="subject-progress-fill" style="width:${pct}%;background:${s.color}"></div></div>
     </div>
-    ${s.unlocked?'<i class="ti ti-chevron-right subject-chevron"></i>':'<i class="ti ti-lock subject-chevron"></i>'}`;
-    if(s.unlocked)card.onclick=()=>showSubject(i);
+    ${s.unlocked ? '<i class="ti ti-chevron-right subject-chevron"></i>' : '<i class="ti ti-lock subject-chevron"></i>'}`;
+    if (s.unlocked) card.onclick = () => showSubject(i);
     list.appendChild(card);
   });
+  
+  document.getElementById('total-completed').textContent = totalCompleted;
 }
 
-function showHome(){stopSpeech();setScreen('home');buildSubjects();}
+function showHome() {
+  stopSpeech();
+  setScreen('home');
+  buildSubjects();
+}
 
-function showSubject(idx){
-  stopSpeech();currentSubjectIdx=idx;
-  const s=SUBJECTS[idx];
-  document.getElementById('subj-big-icon').textContent=s.icon;
-  document.getElementById('subj-big-icon').style.background=s.bg;
-  document.getElementById('subj-title').textContent=s.name;
-  document.getElementById('subj-desc').textContent=s.desc;
-  const container=document.getElementById('levels-list');container.innerHTML='';
-  for(let i=0;i<20;i++){
-    const state=i<s.progress?'done':i===s.progress?'current':'locked';
-    if(i>0){const conn=document.createElement('div');conn.className='connector'+(i<=s.progress?' done':'');container.appendChild(conn);}
-    const row=document.createElement('div');row.className='level-row';
-    row.innerHTML=`<div class="level-node ${state}" ${state!=='locked'?'onclick="startLesson('+i+')"':''}>${state==='done'?'<i class="ti ti-check"></i>':i+1}</div>
-    <div class="level-info"><div class="level-title">Level ${i+1} · ${LEVEL_TOPICS[i]}</div>
-    <div class="level-hint">${state==='done'?'Completed ✓':state==='current'?'Ready to play':'Complete previous level'}</div></div>
-    <span class="level-badge badge-${state}">${state==='done'?'⭐':state==='current'?'Play':'🔒'}</span>`;
+function showSubject(idx) {
+  stopSpeech();
+  currentSubjectIdx = idx;
+  const s = SUBJECTS[idx];
+  document.getElementById('subj-big-icon').textContent = s.icon;
+  document.getElementById('subj-big-icon').style.background = s.bg;
+  document.getElementById('subj-title').textContent = s.name;
+  document.getElementById('subj-desc').textContent = s.desc;
+  
+  const container = document.getElementById('levels-list');
+  container.innerHTML = '';
+  
+  let highestCompleted = -1;
+  for (let i = 0; i < 20; i++) {
+    const key = `${idx}_${i}`;
+    if (userProgress[key]?.completed) highestCompleted = i;
+  }
+  
+  for (let i = 0; i < 20; i++) {
+    const key = `${idx}_${i}`;
+    const isCompleted = userProgress[key]?.completed || false;
+    const isCurrent = i === highestCompleted + 1;
+    const state = isCompleted ? 'done' : isCurrent ? 'current' : 'locked';
+    
+    if (i > 0) {
+      const conn = document.createElement('div');
+      conn.className = 'connector' + (i <= highestCompleted + 1 ? ' done' : '');
+      container.appendChild(conn);
+    }
+    
+    const row = document.createElement('div');
+    row.className = 'level-row';
+    row.innerHTML = `<div class="level-node ${state}" ${state !== 'locked' ? 'onclick="startLesson(' + i + ')"' : ''}>${state === 'done' ? '<i class="ti ti-check"></i>' : i + 1}</div>
+    <div class="level-info"><div class="level-title">Level ${i + 1} · ${LEVEL_TOPICS[i]}</div>
+    <div class="level-hint">${state === 'done' ? 'Completed ✓' : state === 'current' ? 'Ready to play' : 'Complete previous level'}</div></div>
+    <span class="level-badge badge-${state}">${state === 'done' ? '⭐' : state === 'current' ? 'Play' : '🔒'}</span>`;
     container.appendChild(row);
   }
+  
   setScreen('subject');
 }
 
-function startLesson(levelIdx){
+async function startLesson(levelIdx) {
   stopSpeech();
-  currentLevelIdx=levelIdx;playsLeft=2;currentQ=0;answers=[];quizUnlocked=false;
-  const s=SUBJECTS[currentSubjectIdx];
-  const convo=getConvo();
-  document.getElementById('lesson-title').textContent=s.name;
-  document.getElementById('lesson-level').textContent='Level '+(levelIdx+1)+' of 20';
-  document.getElementById('audio-topic').textContent='🎧 '+convo.topic;
-  document.getElementById('plays-count').textContent=playsLeft;
-  document.getElementById('now-speaking').textContent='';
-  document.getElementById('audio-fill').style.width='0%';
-  document.getElementById('audio-time').textContent='0:00';
-  // Speakers row
-  document.getElementById('speakers-row').innerHTML=convo.speakers.map(sp=>
+  currentLevelIdx = levelIdx;
+  playsLeft = 2;
+  currentQ = 0;
+  answers = [];
+  quizUnlocked = false;
+  
+  currentConvo = await getConversation(currentSubjectIdx, levelIdx);
+  
+  const s = SUBJECTS[currentSubjectIdx];
+  document.getElementById('lesson-title').textContent = s.name;
+  document.getElementById('lesson-level').textContent = 'Level ' + (levelIdx + 1) + ' of 20';
+  document.getElementById('audio-topic').textContent = '🎧 ' + currentConvo.topic;
+  document.getElementById('plays-count').textContent = playsLeft;
+  document.getElementById('now-speaking').textContent = '';
+  document.getElementById('audio-fill').style.width = '0%';
+  document.getElementById('audio-time').textContent = '0:00';
+  
+  document.getElementById('speakers-row').innerHTML = currentConvo.speakers.map(sp =>
     `<div class="speaker-chip"><div class="speaker-dot" style="background:${sp.dot}"></div><span class="speaker-name">${sp.name}</span></div>`
   ).join('');
-  // Waveform
-  const wf=document.getElementById('waveform');wf.innerHTML='';
-  for(let i=0;i<38;i++){const b=document.createElement('div');b.className='wave-bar';b.style.height=(8+Math.random()*24)+'px';wf.appendChild(b);}
+  
+  const wf = document.getElementById('waveform');
+  wf.innerHTML = '';
+  for (let i = 0; i < 38; i++) {
+    const b = document.createElement('div');
+    b.className = 'wave-bar';
+    b.style.height = (8 + Math.random() * 24) + 'px';
+    wf.appendChild(b);
+  }
+  
   updatePlayIcon();
   renderQuizLocked();
   setScreen('lesson');
 }
 
-function stopAndGoBack(){stopSpeech();showSubject(currentSubjectIdx);}
-
-function renderQuizLocked(){
-  const notice=ttsSupported?'':'<div class="tts-notice"><i class="ti ti-info-circle"></i> Your browser does not support speech synthesis. The audio is simulated — questions will unlock after 2 plays.</div>';
-  document.getElementById('quiz-section').innerHTML=notice+`<div class="quiz-locked"><div class="quiz-locked-icon"><i class="ti ti-headphones"></i></div><div class="quiz-locked-text">Listen to the conversation <strong>twice</strong> to unlock the comprehension questions.</div></div>`;
+function stopAndGoBack() {
+  stopSpeech();
+  showSubject(currentSubjectIdx);
 }
 
-function renderQuiz(){
-  const convo=getConvo();const qs=document.getElementById('quiz-section');
-  if(currentQ>=convo.qs.length){showResult();return;}
-  const q=convo.qs[currentQ];
-  qs.innerHTML=`<div class="quiz-num">Question ${currentQ+1} of ${convo.qs.length}</div>
+function renderQuizLocked() {
+  const notice = ttsSupported ? '' : '<div class="tts-notice"><i class="ti ti-info-circle"></i> Your browser does not support speech synthesis. The audio is simulated — questions will unlock after 2 plays.</div>';
+  document.getElementById('quiz-section').innerHTML = notice + `<div class="quiz-locked"><div class="quiz-locked-icon"><i class="ti ti-headphones"></i></div><div class="quiz-locked-text">Listen to the conversation <strong>twice</strong> to unlock the comprehension questions.</div></div>`;
+}
+
+function renderQuiz() {
+  if (!currentConvo) return;
+  const qs = document.getElementById('quiz-section');
+  if (currentQ >= currentConvo.qs.length) { showResult(); return; }
+  const q = currentConvo.qs[currentQ];
+  qs.innerHTML = `<div class="quiz-num">Question ${currentQ + 1} of ${currentConvo.qs.length}</div>
   <div class="quiz-q">${q.q}</div>
-  ${q.opts.map((o,i)=>`<button class="option-btn" id="opt-${i}" onclick="selectAnswer(${i})"><div class="option-letter">${'ABCD'[i]}</div>${o}</button>`).join('')}
+  ${q.opts.map((o, i) => `<button class="option-btn" id="opt-${i}" onclick="selectAnswer(${i})"><div class="option-letter">${'ABCD'[i]}</div>${o}</button>`).join('')}
   <button class="next-btn" id="next-q-btn" disabled onclick="nextQuestion()">Next <i class="ti ti-arrow-right"></i></button>`;
 }
 
-function selectAnswer(idx){
-  const q=getConvo().qs[currentQ];
-  for(let i=0;i<q.opts.length;i++){const b=document.getElementById('opt-'+i);if(b){b.disabled=true;if(i===q.ans)b.classList.add('correct');if(i===idx&&idx!==q.ans)b.classList.add('wrong');}}
-  answers.push(idx===q.ans);
-  const nb=document.getElementById('next-q-btn');
-  if(nb){nb.disabled=false;nb.innerHTML=(currentQ+1>=getConvo().qs.length?'See results':'Next question')+' <i class="ti ti-arrow-right"></i>';}
+function selectAnswer(idx) {
+  const q = currentConvo.qs[currentQ];
+  for (let i = 0; i < q.opts.length; i++) {
+    const b = document.getElementById('opt-' + i);
+    if (b) {
+      b.disabled = true;
+      if (i === q.ans) b.classList.add('correct');
+      if (i === idx && idx !== q.ans) b.classList.add('wrong');
+    }
+  }
+  answers.push(idx === q.ans);
+  const nb = document.getElementById('next-q-btn');
+  if (nb) {
+    nb.disabled = false;
+    nb.innerHTML = (currentQ + 1 >= currentConvo.qs.length ? 'See results' : 'Next question') + ' <i class="ti ti-arrow-right"></i>';
+  }
 }
 
-function nextQuestion(){currentQ++;if(currentQ>=getConvo().qs.length)showResult();else renderQuiz();}
+function nextQuestion() {
+  currentQ++;
+  if (currentQ >= currentConvo.qs.length) showResult();
+  else renderQuiz();
+}
 
-function showResult(){
-  const correct=answers.filter(Boolean).length,total=answers.length,pct=Math.round((correct/total)*100);
-  document.getElementById('result-correct').textContent=correct;
-  document.getElementById('result-total').textContent=total;
-  document.getElementById('result-pct').textContent=pct+'%';
-  document.getElementById('result-emoji').textContent=pct===100?'🏆':pct>=67?'⭐':'💪';
-  document.getElementById('result-title').textContent=pct===100?'Perfect score!':pct>=67?'Level complete!':'Keep practicing!';
-  document.getElementById('result-sub').textContent=pct>=67?'You passed level '+(currentLevelIdx+1)+' of '+SUBJECTS[currentSubjectIdx].name:'Try listening again — you\'ll get it!';
-  if(pct>=67&&SUBJECTS[currentSubjectIdx].progress===currentLevelIdx)SUBJECTS[currentSubjectIdx].progress=currentLevelIdx+1;
-  const nb=document.getElementById('next-level-btn');
-  if(currentLevelIdx+1>=20){nb.innerHTML='Subject complete! 🎉';nb.onclick=showHome;}
+async function showResult() {
+  const correct = answers.filter(Boolean).length;
+  const total = answers.length;
+  const pct = Math.round((correct / total) * 100);
+  
+  document.getElementById('result-correct').textContent = correct;
+  document.getElementById('result-total').textContent = total;
+  document.getElementById('result-pct').textContent = pct + '%';
+  document.getElementById('result-emoji').textContent = pct === 100 ? '🏆' : pct >= 67 ? '⭐' : '💪';
+  document.getElementById('result-title').textContent = pct === 100 ? 'Perfect score!' : pct >= 67 ? 'Level complete!' : 'Keep practicing!';
+  document.getElementById('result-sub').textContent = pct >= 67 ? 'You passed level ' + (currentLevelIdx + 1) + ' of ' + SUBJECTS[currentSubjectIdx].name : 'Try listening again — you\'ll get it!';
+  
+  if (pct >= 67) {
+    await saveProgress(currentSubjectIdx, currentLevelIdx, pct);
+  }
+  
+  const nb = document.getElementById('next-level-btn');
+  if (currentLevelIdx + 1 >= 20) {
+    nb.innerHTML = 'Subject complete! 🎉';
+    nb.onclick = showHome;
+  } else {
+    nb.onclick = goNextLevel;
+  }
+  
   setScreen('result');
 }
 
-function goNextLevel(){if(currentLevelIdx+1<20)startLesson(currentLevelIdx+1);else showHome();}
-function replayLesson(){startLesson(currentLevelIdx);}
-function setScreen(name){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('screen-'+name).classList.add('active');}
+function goNextLevel() {
+  if (currentLevelIdx + 1 < 20) startLesson(currentLevelIdx + 1);
+  else showHome();
+}
 
-// ── INIT ──────────────────────────────────────────────────────────────────────
+function replayLesson() {
+  startLesson(currentLevelIdx);
+}
+
+function setScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// LEADERBOARD
+// ══════════════════════════════════════════════════════════════════════════════
+async function showLeaderboard() {
+  setScreen('leaderboard');
+  
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .order('total_completed', { ascending: false })
+    .limit(20);
+  
+  if (error || !data || data.length === 0) {
+    document.getElementById('leaderboard-podium').innerHTML = '';
+    document.getElementById('leaderboard-list').innerHTML = '<div class="no-data">No leaderboard data yet. Be the first to complete levels!</div>';
+    return;
+  }
+  
+  // Top 3 podium
+  const podium = document.getElementById('leaderboard-podium');
+  podium.innerHTML = '';
+  
+  const topThree = data.slice(0, 3);
+  if (topThree.length >= 2) {
+    // 2nd place
+    podium.innerHTML += `
+      <div class="podium-place second">
+        <div class="podium-rank">2</div>
+        <div class="podium-name">${topThree[1].username || 'User'}</div>
+        <div class="podium-score">${topThree[1].total_completed}</div>
+      </div>`;
+  }
+  if (topThree.length >= 1) {
+    // 1st place
+    podium.innerHTML += `
+      <div class="podium-place first">
+        <div class="podium-rank">1</div>
+        <div class="podium-name">${topThree[0].username || 'User'}</div>
+        <div class="podium-score">${topThree[0].total_completed}</div>
+      </div>`;
+  }
+  if (topThree.length >= 3) {
+    // 3rd place
+    podium.innerHTML += `
+      <div class="podium-place third">
+        <div class="podium-rank">3</div>
+        <div class="podium-name">${topThree[2].username || 'User'}</div>
+        <div class="podium-score">${topThree[2].total_completed}</div>
+      </div>`;
+  }
+  
+  // Rest of list
+  const list = document.getElementById('leaderboard-list');
+  list.innerHTML = '';
+  
+  data.slice(3).forEach((user, idx) => {
+    const rank = idx + 4;
+    const isCurrentUser = user.id === currentUser?.id;
+    const item = document.createElement('div');
+    item.className = 'leaderboard-item' + (isCurrentUser ? ' current-user' : '');
+    item.innerHTML = `
+      <div class="lb-rank">${rank}</div>
+      <div class="lb-info">
+        <div class="lb-name">${user.username || 'User'} ${isCurrentUser ? '(You)' : ''}</div>
+        <div class="lb-meta">${user.total_completed} levels completed</div>
+      </div>
+      <div class="lb-score">${user.total_completed}</div>`;
+    list.appendChild(item);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════════════════
 initTTS();
-buildSubjects();
+
+// Check auth state
+supabase.auth.getSession().then(({ data: { session } }) => {
+  if (session) {
+    currentUser = session.user;
+    loadUserData().then(() => {
+      setScreen('home');
+    });
+  } else {
+    setScreen('auth');
+  }
+});
+
+// Listen for auth changes
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_IN' && session) {
+    currentUser = session.user;
+    loadUserData();
+  } else if (event === 'SIGNED_OUT') {
+    currentUser = null;
+    userProgress = {};
+    setScreen('auth');
+  }
+});
 </script>
 </body>
 </html>
