@@ -321,9 +321,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 // SUPABASE SETUP
 // ══════════════════════════════════════════════════════════════════════════════
 const SUPABASE_URL = 'https://aigwqkascxvwrjbbzorc.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpZ3dxa2FzY3h2d3JqYmJ6b3JjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY4OTI3MjIsImV4cCI6MjA1MjQ2ODcyMn0.sb_publishable_KFBHKqixyPt6t88Om1sVYg_YmYHBM-k';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpZ3dxa2FzY3h2d3JqYmJ6b3JjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzODA2MTksImV4cCI6MjA5NDk1NjYxOX0.sEAso7qy9yvT6TCPhZ5I1f6r61j4ebFpsoYyi90xksA';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let supabaseClient;
+try {
+  supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  console.log('✅ Supabase initialized');
+} catch (error) {
+  console.error('❌ Supabase initialization failed:', error);
+  alert('Failed to connect to database. Please check your internet connection.');
+}
 
 let currentUser = null;
 let userProgress = {};
@@ -340,7 +347,7 @@ async function handleLogin() {
     return;
   }
   
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
   
   if (error) {
     showAuthError(error.message);
@@ -366,7 +373,7 @@ async function handleSignup() {
     return;
   }
   
-  const { data, error } = await supabase.auth.signUp({
+  const { data, error } = await supabaseClient.auth.signUp({
     email,
     password,
     options: {
@@ -379,7 +386,7 @@ async function handleSignup() {
   } else {
     currentUser = data.user;
     // Create user profile
-    await supabase.from('profiles').insert({
+    await supabaseClient.from('profiles').insert({
       id: currentUser.id,
       username: username,
       total_completed: 0
@@ -390,7 +397,7 @@ async function handleSignup() {
 }
 
 async function handleLogout() {
-  await supabase.auth.signOut();
+  await supabaseClient.auth.signOut();
   currentUser = null;
   userProgress = {};
   setScreen('auth');
@@ -445,7 +452,7 @@ async function saveProgress(subjectIdx, levelIdx, score) {
   userProgress[key] = { completed: true, score };
   
   // Save to Supabase
-  await supabase.from('user_progress').upsert({
+  await supabaseClient.from('user_progress').upsert({
     user_id: currentUser.id,
     subject_index: subjectIdx,
     level_index: levelIdx,
@@ -455,7 +462,7 @@ async function saveProgress(subjectIdx, levelIdx, score) {
   
   // Update total completed count
   const totalCompleted = Object.keys(userProgress).length;
-  await supabase.from('profiles').update({
+  await supabaseClient.from('profiles').update({
     total_completed: totalCompleted
   }).eq('id', currentUser.id);
   
@@ -912,7 +919,7 @@ async function showLeaderboard() {
 initTTS();
 
 // Check auth state
-supabase.auth.getSession().then(({ data: { session } }) => {
+supabaseClient.auth.getSession().then(({ data: { session } }) => {
   if (session) {
     currentUser = session.user;
     loadUserData().then(() => {
@@ -924,7 +931,7 @@ supabase.auth.getSession().then(({ data: { session } }) => {
 });
 
 // Listen for auth changes
-supabase.auth.onAuthStateChange((event, session) => {
+supabaseClient.auth.onAuthStateChange((event, session) => {
   if (event === 'SIGNED_IN' && session) {
     currentUser = session.user;
     loadUserData();
